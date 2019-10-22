@@ -5,6 +5,9 @@ namespace Microsoft.BingAds.SDK.Extensions
 {
     public static class Logger
     {
+        /// <summary>
+        /// override this to provide customer tracing to your app
+        /// </summary>
         public static Action<string, string, TraceEventType> LogListener { get; set; }
             = (string str, string source, TraceEventType type)
                 => Trace.WriteLine($"[{DateTime.UtcNow.ToString("u")}] {type}: {source}: {str}");

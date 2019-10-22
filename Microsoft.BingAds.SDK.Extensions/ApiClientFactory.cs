@@ -46,17 +46,17 @@ namespace Microsoft.BingAds.SDK.Extensions
         }
 
         /// <summary>
-        /// Factory for ApiV13Client. 
+        /// Factory for V13ApiClient. 
         /// </summary>
         /// <param name="binding">optional Binding value</param>
         /// <returns>client</returns>
-        public ApiV13Client CreateApiV13Client(Binding binding = null)
+        public V13ApiClient CreateV13ApiClient(Binding binding = null)
         {
             if (apiType != ApiType.V13)
                 throw new InvalidOperationException("ApiType is not set correctly in factory");
 
             Logger.Verbose($"called");
-            var apiClient = new ApiV13Client()
+            var apiClient = new V13ApiClient()
             {
                 AdInsightApi = new Lazy<ApiClient<IAdInsightService>>(() =>
                     CreateApiClient<IAdInsightService>(
@@ -107,8 +107,8 @@ namespace Microsoft.BingAds.SDK.Extensions
             var apiClient = new ApiClient<TClient>() { Client = client };
             apiClient.ActionOnDispose = () =>
             {
-                try { ((IDisposable)client)?.Dispose(); } catch { }
-                try { channelFactory.Close(); } catch { }
+                try { ((IDisposable)client)?.Dispose(); } catch (Exception ex) { Logger.Error(ex.ToString()); }
+                try { channelFactory.Close(); } catch (Exception ex) { Logger.Error(ex.ToString()); }
             };
 
             return apiClient;

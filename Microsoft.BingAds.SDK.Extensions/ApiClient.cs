@@ -21,14 +21,14 @@ namespace Microsoft.BingAds.SDK.Extensions
 
         public void Dispose()
         {
-            try { ActionOnDispose?.Invoke(); } catch { }
+            try { ActionOnDispose?.Invoke(); } catch (Exception ex) { Logger.Error(ex.ToString()); }
         }
     }
 
     /// <summary>
     /// Client wrapper for all BingAdsApi service types. 
     /// </summary>
-    public sealed class ApiV13Client : IDisposable
+    public sealed class V13ApiClient : IDisposable
     {
         /// <summary>
         /// BingAdsApi AdInsight service client

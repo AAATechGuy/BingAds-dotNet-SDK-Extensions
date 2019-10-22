@@ -23,6 +23,11 @@ namespace ConsoleApp
                 Trace.TraceError($"FaultDetail: {JsonConvert.SerializeObject(faultEx.GetFaultDetail(), Formatting.Indented)}");
                 return null;
             }
+            catch (Exception ex)
+            {
+                Trace.TraceError($"Exception: {ex}");
+                return null;
+            }
         }
     }
 }

@@ -144,5 +144,107 @@ namespace ConsoleApp
                 }
             }
         }
+
+        private static void Test_V13ApiClient(
+            string developerToken,
+            string applicationClientId,
+            string usernameLoginHint,
+            long customerId,
+            long accountId)
+        {
+            var authDataFactory = new AuthenticationTokenFactory(
+                applicationClientId,
+                usernameLoginHint,
+                tokenCacheCorrelationId: "default");
+
+            var clientFactory = new ApiClientFactory(developerToken, authDataFactory, null, accountId);
+
+            using (var client = clientFactory.CreateV13ApiClient())
+            {
+                //// CustomerManagement
+
+                Trace.WriteLine(Environment.NewLine + "> GetUser: ");
+                client.CustomerManagement.DebugExecute(c => c.GetUser(new GetUserRequest() { }));
+
+                Trace.WriteLine(Environment.NewLine + "> FindAccounts: ");
+                client.CustomerManagement.DebugExecute(c => c.FindAccounts(new FindAccountsRequest() { TopN = 10 }));
+
+                Trace.WriteLine(Environment.NewLine + "> GetAccount: ");
+                client.CustomerManagement.DebugExecute(c => c.GetAccount(new GetAccountRequest() { AccountId = accountId }));
+
+                //// CustomerBilling
+
+                Trace.WriteLine(Environment.NewLine + "> GetAccountMonthlySpend: ");
+                client.CustomerBilling.DebugExecute(c => c.GetAccountMonthlySpend(
+                    new GetAccountMonthlySpendRequest()
+                    {
+                        AccountId = accountId,
+                        MonthYear = DateTime.UtcNow
+                    }));
+
+                //// CampaignManagement
+
+                Trace.WriteLine(Environment.NewLine + "> GetCampaignsByAccountId: ");
+                client.CampaignManagement.DebugExecute(c => c.GetCampaignsByAccountId(
+                    new GetCampaignsByAccountIdRequest()
+                    {
+                        //CustomerAccountId = accountId.ToString(), // set in header
+                        AccountId = accountId,
+                        CampaignType = CampaignType.Search,
+                    }));
+
+                //// Bulk
+
+                Trace.WriteLine(Environment.NewLine + "> DownloadCampaignsByAccountIds: ");
+                client.Bulk.DebugExecute(c => c.DownloadCampaignsByAccountIds(
+                    new DownloadCampaignsByAccountIdsRequest()
+                    {
+                        //CustomerAccountId = accountId.ToString(), // set in header
+                        AccountIds = new long[] { accountId },
+                        DataScope = DataScope.EntityData,
+                        DownloadEntities = new DownloadEntity[] { DownloadEntity.Campaigns },
+                        FormatVersion = "6.0"
+                    }));
+
+                //// Reporting
+
+                Trace.WriteLine(Environment.NewLine + "> SubmitGenerateReport: ");
+                var reportResponse = client.Reporting.DebugExecute(c => c.SubmitGenerateReport(
+                    new SubmitGenerateReportRequest()
+                    {
+                        ReportRequest = new BudgetSummaryReportRequest
+                        {
+                            ReportName = Guid.NewGuid().ToString(),
+                            Format = ReportFormat.Tsv,
+                            Scope = new AccountThroughCampaignReportScope
+                            {
+                                AccountIds = new long[] { accountId },
+                            },
+                            Time = new ReportTime
+                            {
+                                PredefinedTime = ReportTimePeriod.Last30Days
+                            },
+                            Columns = new[]
+                            {
+                                BudgetSummaryReportColumn.AccountId,
+                                BudgetSummaryReportColumn.AccountName,
+                                BudgetSummaryReportColumn.Date,
+                                BudgetSummaryReportColumn.MonthlyBudget,
+                                BudgetSummaryReportColumn.DailySpend
+                            }
+                        }
+                    }));
+
+                if (reportResponse != null)
+                {
+                    Trace.WriteLine(Environment.NewLine + "> PollGenerateReport: ");
+                    client.DebugExecute(c => c.Reporting.PollGenerateReport(
+                        new PollGenerateReportRequest()
+                        {
+                            ReportRequestId = reportResponse.ReportRequestId
+                        }));
+                }
+            }
+        }
     }
 }
